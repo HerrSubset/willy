@@ -141,7 +141,7 @@ if __name__ == "__main__":
         drop_crap(args)
 
     # start the filter command
-    if args.command == "filter":
+    elif args.command == "filter":
         filter(args)
 
 
