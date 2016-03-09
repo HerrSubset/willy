@@ -6,6 +6,10 @@ import random
 
 
 
+################################################################################
+## Helper Functions
+################################################################################
+
 # print a line with information for the user
 def print_info(message):
     print("[INFO] " + message)
@@ -29,6 +33,42 @@ def get_output_path(args, default_path = "willyWroteThis.csv"):
 
 
 
+# reads the input file and writes all lines into an array
+def get_lines_array(args):
+    print_info("First let me get all this stuff in my head.")
+    with open(args.file, "r") as read_file:
+        lines = read_file.readlines()
+
+    return lines
+
+
+
+# sorts an array of strings on a certain index
+def get_user_hash(lines, index):
+    print_info("Ok, gimme a sec while I figure this out.")
+    # group all lines of a member by putting them in a dictionary
+    dict = {}
+    for line in lines:
+        line_array = line.split(",")
+        dict.setdefault(line_array[index], []).append(line)
+
+    return dict
+
+
+
+# prompts the user for a certain percentage. Returns a number between 0 and 1.
+def get_percentage_from_user():
+    #get the percentage of user records that should be kept
+    number = input("Aight, what percentage of users do you want to keep? [0-100] ")
+    number = float(number)
+    while not(type(number) == float and number <= 100 and number >= 0):
+        number = input("Don't be a smartass! Gimme a number between 0 and 100! ")
+        number = float(number)
+
+    return number / 100
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -43,6 +83,11 @@ def parse_arguments():
     return args
 
 
+
+
+################################################################################
+## Command Functions
+################################################################################
 
 # the dropCrap command. It throws away all data fields except for "IKL",
 # "TRACE_ID", and "TYPE_OMSCHRIJVING"
@@ -69,9 +114,7 @@ def drop_crap(args):
 # their data to a new file.
 def filter(args):
     #read data into memory
-    print_info("First let me get all this stuff in my head.")
-    with open(args.file, "r") as read_file:
-        lines = read_file.readlines()
+    lines = get_lines_array(args)
 
     # get the index at which the value we're sorting on is at
     first_line = lines.pop(0)
@@ -79,28 +122,16 @@ def filter(args):
     index = first_line.index("IKL")
     print_info("I think the user ID is at index " + str(index))
 
-    print_info("Ok, gimme a sec while I figure this out.")
-    # group all lines of a member by putting them in a dictionary
-    dict = {}
-    for line in lines:
-        line_array = line.split(",")
-        dict.setdefault(line_array[index], []).append(line)
+    dict = get_user_hash(lines, index)
 
     # we can free the memory that lines is using up
     lines = []
     users = list(dict.keys())
 
-    #get the percentage of user records that should be kept
-    number = input("Aight, what percentage of users do you want to keep? [0-100] ")
-    number = float(number)
-    while not(type(number) == float and number <= 100 and number >= 0):
-        number = input("Don't be a smartass! Gimme a number between 0 and 100! ")
-        number = float(number)
+    percentage = get_percentage_from_user()
 
-    percentage = number / 100
-
+    #select random users to print to new file
     selected_users = []
-
     while (len(selected_users) / len(dict.keys())) < percentage:
         #generate random user to be selected
         user_index = random.randint(0, len(users) - 1)
@@ -121,9 +152,7 @@ def filter(args):
     with open(path, "w") as write_file:
         #write the header line to the file
         write_file.write(first_line)
-        #write the data
-        for l in print_array:
-            write_file.write(l)
+        write_file.write("".join(print_array))
 
 
 
