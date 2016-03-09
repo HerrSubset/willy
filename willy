@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import random
 
 
 
@@ -14,6 +15,17 @@ def print_info(message):
 # print an error line to the user
 def die(message):
     print("[ERROR] " + message)
+    exit()
+
+
+
+#gets the path for the output file
+def get_output_path(args, default_path = "willyWroteThis.csv"):
+    path = default_path
+    if args.output_file:
+        path = args.output_file
+
+    return path
 
 
 
@@ -39,9 +51,7 @@ def drop_crap(args):
     print_info("I'm loading your file. Be patient, it's 19 million records and I don't know how to multithread.")
 
     #create a new file to write to
-    path = "willyWroteThis.txt"
-    if args.output_file:
-        path = args.output_file
+    path = get_output_path(args)
 
     #process data and print to new file
     with open(args.file, "r") as read_file:
@@ -51,6 +61,69 @@ def drop_crap(args):
                 write_file.write(row[0] + "," + row[2] + "," + row[4] + "\n")
 
     print_info("Yo dude, I put all that good stuff you asked for in " + path)
+
+
+
+# the filter command. It asks how much % of all users in the database should be
+# retained. It then selects users until that percentage is reached and writes
+# their data to a new file.
+def filter(args):
+    #read data into memory
+    print_info("First let me get all this stuff in my head.")
+    with open(args.file, "r") as read_file:
+        lines = read_file.readlines()
+
+    # get the index at which the value we're sorting on is at
+    first_line = lines.pop(0)
+    first_line_array = first_line.split(",")
+    index = first_line.index("IKL")
+    print_info("I think the user ID is at index " + str(index))
+
+    print_info("Ok, gimme a sec while I figure this out.")
+    # group all lines of a member by putting them in a dictionary
+    dict = {}
+    for line in lines:
+        line_array = line.split(",")
+        dict.setdefault(line_array[index], []).append(line)
+
+    # we can free the memory that lines is using up
+    lines = []
+    users = list(dict.keys())
+
+    #get the percentage of user records that should be kept
+    number = input("Aight, what percentage of users do you want to keep? [0-100] ")
+    number = float(number)
+    while not(type(number) == float and number <= 100 and number >= 0):
+        number = input("Don't be a smartass! Gimme a number between 0 and 100! ")
+        number = float(number)
+
+    percentage = number / 100
+
+    selected_users = []
+
+    while (len(selected_users) / len(dict.keys())) < percentage:
+        #generate random user to be selected
+        user_index = random.randint(0, len(users) - 1)
+        selected_users.append(users.pop(user_index))
+
+    print_info("Yo man, I selected " + str(len(selected_users)) +
+                " dudes and dudettes for you, hope you're happy with them.")
+
+    # make one long array of all the selected users' data
+    print_array = []
+    for u in selected_users:
+        for l in dict[u]:
+            print_array.append(l)
+
+    #write all selected users to the output file
+    path = get_output_path(args, "filteredByWilly.csv")
+
+    with open(path, "w") as write_file:
+        #write the header line to the file
+        write_file.write(first_line)
+        #write the data
+        for l in print_array:
+            write_file.write(l)
 
 
 
@@ -66,6 +139,10 @@ if __name__ == "__main__":
     # start the dropCrap command
     if args.command == "dropCrap":
         drop_crap(args)
+
+    # start the filter command
+    if args.command == "filter":
+        filter(args)
 
 
     # execute this is the command was unknown
