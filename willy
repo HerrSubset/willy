@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+import argparse
+
+
+
+#print a line with information for the user
+def print_info(message):
+    print("[INFO] " + message)
+
+
+
+#check what arguments the user gave to Willy
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", help="Tell Willy what to do.")
+    parser.add_argument("file", help="Tell Willy what file to do something with.")
+    parser.add_argument("-o", "--output-file", help="Tell Willy what file to write to.")
+
+    args = parser.parse_args()
+
+    return args
+
+
+
+#
+def drop_crap(args):
+    #load data file
+    print_info("I'm loading that file. Be patient, it's 19 million records and I don't know how to multithread.")
+    file = open(args.file, "r")
+    lines = file.readlines()
+    file.close()
+
+    #create a new file to write to
+    path = "willyWroteThis.txt"
+    if args.output_file:
+        path = args.output_file
+
+    write_file = open(path, "w")
+
+    #process data and print to new file
+    print_info("Whoa, I can finally start writing to " + path +". This might take even longer though.")
+    for l in lines:
+        values_array = l.split(";")
+        write_file.write(values_array[0] + "," + values_array[2] + "," + values_array[4] + "\n")
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+
+
+    # start the dropCrap argument
+    if args.command == "dropCrap":
+        drop_crap(args)
+
+
+    # execute this is the command was unknown
+    else:
+        print("Yo man, what is this '" + args.command +
+                "' thing you're talking about? I don't know how to do that.")
