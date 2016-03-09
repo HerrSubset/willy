@@ -17,3 +17,18 @@ Here's an Example:
   [INFO] I'm loading that file. Be patient, it's 19 million records and I don't know how to multithread.
   [INFO] Whoa, I can finally start writing to willyWroteThis.csv. This might take even longer though.
 ```
+
+
+### Filter
+Willy can also make the dataset a little smaller for you. You can ask for this with the ``filter`` command. Willy will group all data belonging to one user together and then asks you which percentage of users he should keep. The users he keeps are selected at random.
+
+Once again, here's an example:
+
+```
+  $ willy filter goodstuffs.csv
+  [INFO] First let me get all this stuff in my head.
+  [INFO] I think the user ID is at index 0
+  [INFO] Ok, gimme a sec while I figure this out.
+  Aight, what percentage of users do you want to keep? [0-100] 10
+  [INFO] Yo man, I selected 19712 dudes and dudettes for you, hope you're happy with them.
+```
