@@ -103,7 +103,8 @@ def drop_crap(args):
         with open(path, "w") as write_file:
             reader = csv.reader(read_file, delimiter=';')
             for row in reader:
-                write_file.write(row[0] + "," + row[2] + "," + row[4] + "\n")
+                write_file.write(row[0] + "," + row[2] + "," + row[3] + ","
+                                + row[4] + "\n")
 
     print_info("Yo dude, I put all that good stuff you asked for in " + path)
 
