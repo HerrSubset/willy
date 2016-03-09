@@ -1,27 +1,30 @@
 #!/usr/bin/env python
 
 import argparse
+import csv
 
 
 
-#print a line with information for the user
+# print a line with information for the user
 def print_info(message):
     print("[INFO] " + message)
 
 
 
-#print an error line to the user
+# print an error line to the user
 def die(message):
     print("[ERROR] " + message)
 
 
 
-#check what arguments the user gave to Willy
+# check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("command", help="Tell Willy what to do.")
-    parser.add_argument("file", help="Tell Willy what file to do something with.")
-    parser.add_argument("-o", "--output-file", help="Tell Willy what file to write to.")
+    parser.add_argument("file",
+                        help="Tell Willy what file to do something with.")
+    parser.add_argument("-o", "--output-file",
+                        help="Tell Willy what file to write to.")
 
     args = parser.parse_args()
 
@@ -29,42 +32,38 @@ def parse_arguments():
 
 
 
-#
+# the dropCrap command. It throws away all data fields except for "IKL",
+# "TRACE_ID", and "TYPE_OMSCHRIJVING"
 def drop_crap(args):
     #load data file
     print_info("I'm loading your file. Be patient, it's 19 million records and I don't know how to multithread.")
-    file = open(args.file, "r")
-    lines = file.readlines()
-    file.close()
 
     #create a new file to write to
     path = "willyWroteThis.txt"
     if args.output_file:
         path = args.output_file
 
-    write_file = open(path, "w")
-
     #process data and print to new file
-    print_info("Whoa, I can finally start writing to '" + path +"'. This might take even longer though.")
-    for l in lines:
-        values_array = l.split(";")
-        write_file.write(values_array[0] + "," + values_array[2] + "," + values_array[4] + "\n")
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=';')
+            for row in reader:
+                write_file.write(row[0] + "," + row[2] + "," + row[4] + "\n")
 
     print_info("Yo dude, I put all that good stuff you asked for in " + path)
-    write_file.close()
 
 
 
 
-
-
-
+################################################################################
+## Program Start
+################################################################################
 
 if __name__ == "__main__":
     args = parse_arguments()
 
 
-    # start the dropCrap argument
+    # start the dropCrap command
     if args.command == "dropCrap":
         drop_crap(args)
 
