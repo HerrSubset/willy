@@ -10,6 +10,12 @@ def print_info(message):
 
 
 
+#print an error line to the user
+def die(message):
+    print("[ERROR] " + message)
+
+
+
 #check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -65,5 +71,5 @@ if __name__ == "__main__":
 
     # execute this is the command was unknown
     else:
-        print("Yo man, what is this '" + args.command +
+        die("Yo man, what is this '" + args.command +
                 "' thing you're talking about? I don't know how to do that.")
