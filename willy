@@ -26,7 +26,7 @@ def parse_arguments():
 #
 def drop_crap(args):
     #load data file
-    print_info("I'm loading that file. Be patient, it's 19 million records and I don't know how to multithread.")
+    print_info("I'm loading your file. Be patient, it's 19 million records and I don't know how to multithread.")
     file = open(args.file, "r")
     lines = file.readlines()
     file.close()
@@ -39,10 +39,13 @@ def drop_crap(args):
     write_file = open(path, "w")
 
     #process data and print to new file
-    print_info("Whoa, I can finally start writing to " + path +". This might take even longer though.")
+    print_info("Whoa, I can finally start writing to '" + path +"'. This might take even longer though.")
     for l in lines:
         values_array = l.split(";")
         write_file.write(values_array[0] + "," + values_array[2] + "," + values_array[4] + "\n")
+
+    print_info("Yo dude, I put all that good stuff you asked for in " + path)
+    write_file.close()
 
 
 
