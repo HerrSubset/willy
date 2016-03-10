@@ -161,7 +161,7 @@ def filter(args):
                 " dudes and dudettes for you, hope you're happy with them.")
 
     users = []  #free up some memory
-    
+
     #use set for more efficient lookup
     selected_users = set(selected_users)
 
@@ -192,6 +192,12 @@ def filter(args):
 
 
 
+#
+def sequencify(args):
+    print("I don't know how to do this yet")
+
+
+
 
 ################################################################################
 ## Program Start
@@ -209,6 +215,9 @@ if __name__ == "__main__":
     elif args.command == "filter":
         filter(args)
 
+    #start the sequencify command
+    elif args.command == "sequencify":
+        sequencify(args)
 
     # execute this is the command was unknown
     else:
