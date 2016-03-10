@@ -125,17 +125,19 @@ def filter(args):
         try:
             uid_index = header.index("IKL")
         except:
-            die("Sure you used the correct delimiter?")
+            die("Couldn't find 'IKL' in the header. Sure you used the correct delimiter?")
 
         #process data lines
+        previous_uid = ""
         for row in reader:
             uid = row[uid_index]
 
-            #only add uid to users list if it's not in there yet
-            try:
-                users.index(uid)
-            except:
+            if uid != previous_uid:
                 users.append(uid)
+
+            #save current uid for next row
+            previous_uid = uid
+
 
     #let user decide what percentage of users to keep
     percentage = get_percentage_from_user()
