@@ -78,6 +78,7 @@ def parse_arguments():
     parser.add_argument("-o", "--output-file",
                         help="Tell Willy what file to write to.")
     parser.add_argument("-d", "--delimiter", default=",")
+    parser.add_argument("-p", "--percentage", type=float)
 
     args = parser.parse_args()
 
@@ -140,7 +141,11 @@ def filter(args):
 
 
     #let user decide what percentage of users to keep
-    percentage = get_percentage_from_user()
+    percentage = 0
+    if args.percentage:
+        percentage = args.percentage
+    else:
+        percentage = get_percentage_from_user()
 
     #select random users to print to new file
     selected_users = []
