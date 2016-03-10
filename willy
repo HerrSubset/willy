@@ -3,6 +3,7 @@
 import argparse
 import csv
 import random
+from datetime import datetime
 
 
 
@@ -109,6 +110,37 @@ def get_uids(args):
 
 
 
+# sort an array of arrays according to database
+def sort_sequence_array(array, date_index):
+    res = array
+
+    for i in range(0, len(res)):
+        for j in range(i, len(res)):
+            format = "%Y-%m-%d %H:%M:%S"
+            date1 = datetime.strptime(res[i][date_index], format)
+            date2 = datetime.strptime(res[j][date_index], format)
+
+            if date2 < date1:
+                tmp = res[i]
+                res[i] = res[j]
+                res[j] = tmp
+
+    return res
+
+
+
+#transforms an array of arrays into a sequence string
+def get_sequence(array, action_index):
+    res = ""
+
+    for line in array:
+        res += line[action_index].replace(" ", "")
+        res += "  "
+
+    return res
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -207,7 +239,38 @@ def filter(args):
 
 #
 def sequencify(args):
-    print("I don't know how to do this yet")
+    trace_hash = {}
+
+    # use a hash to group every trace's data
+    with open(args.file, "r") as read_file:
+        reader = csv.reader(read_file, delimiter=args.delimiter)
+        header = reader.__next__()
+        #an error is raised here if incorrect delimiter was user_index
+        try:
+            trace_index = header.index("TRACE_ID")
+            action_index = header.index("TYPE_OMSCHRIJVING")
+            timestamp_index = header.index("TIMESTAMP")
+        except:
+            die("Sure you used the correct delimiter?")
+
+        for row in reader:
+            trace_id = row[trace_index]
+            #add row to correct place in hash
+            trace_hash.setdefault(trace_id, []).append(row)
+
+
+    #sort the arrays that are stored in the trace hash based on date
+    for key in trace_hash:
+        trace_hash[key] = sort_sequence_array(trace_hash[key], timestamp_index)
+
+    #for every key in the hash, write out the sequence of actions
+    path = get_output_path(args, "sequences.csv")
+    with open(path, "w") as write_file:
+        for key in trace_hash:
+            sequence = get_sequence(trace_hash[key], action_index)
+            write_file.write(sequence + "\n")
+
+
 
 
 
