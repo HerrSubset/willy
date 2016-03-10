@@ -135,7 +135,7 @@ def get_sequence(array, action_index):
 
     for line in array:
         res += line[action_index].replace(" ", "")
-        res += "  "
+        res += " "
 
     return res
 
@@ -151,6 +151,8 @@ def parse_arguments():
                         help="Tell Willy what file to write to.")
     parser.add_argument("-d", "--delimiter", default=",")
     parser.add_argument("-p", "--percentage", type=float)
+    parser.add_argument("-s", "--sort",
+                        help="sort the hash when creating sequences")
 
     args = parser.parse_args()
 
@@ -241,6 +243,7 @@ def filter(args):
 def sequencify(args):
     trace_hash = {}
 
+    print_info("Putting all them sequences in a dictionary")
     # use a hash to group every trace's data
     with open(args.file, "r") as read_file:
         reader = csv.reader(read_file, delimiter=args.delimiter)
@@ -260,11 +263,13 @@ def sequencify(args):
 
 
     #sort the arrays that are stored in the trace hash based on date
-    for key in trace_hash:
-        trace_hash[key] = sort_sequence_array(trace_hash[key], timestamp_index)
+    if args.sort:
+        print_inf("Starting to sort the traces. If you have to go to the toilet, now's the time.")
+        for key in trace_hash:
+            trace_hash[key] = sort_sequence_array(trace_hash[key], timestamp_index)
 
     #for every key in the hash, write out the sequence of actions
-    path = get_output_path(args, "sequences.csv")
+    path = get_output_path(args, "sequences.txt")
     with open(path, "w") as write_file:
         for key in trace_hash:
             sequence = get_sequence(trace_hash[key], action_index)
