@@ -139,6 +139,9 @@ def filter(args):
             #save current uid for next row
             previous_uid = uid
 
+    #make sure every user was only selected once
+    users = list(set(users))
+
 
     #let user decide what percentage of users to keep
     percentage = 0
@@ -158,24 +161,25 @@ def filter(args):
                 " dudes and dudettes for you, hope you're happy with them.")
 
     users = []  #free up some memory
+    
+    #use set for more efficient lookup
+    selected_users = set(selected_users)
+
 
     #go over the file again to extract all data from selected users
+    print_info("Let me see if I can find back all these peeps.")
     user_data = []
     with open(args.file, "r") as read_file:
         reader = csv.reader(read_file, delimiter=args.delimiter)
         header = reader.__next__()
         uid_index = header.index("IKL")
         for row in reader:
-            try:
-                #check if user of current row was selected
-                selected_users.index(row[uid_index])
-                #if no error was thrown, keep current row
+            if row[uid_index] in selected_users:
                 user_data.append(row)
-            except:
-                pass
 
 
     #write all selected users to the output file
+    print_info("About damn time, let the printing begin!")
     path = get_output_path(args, "filteredByWilly.csv")
 
     with open(path, "w") as write_file:
