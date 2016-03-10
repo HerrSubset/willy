@@ -121,7 +121,13 @@ def filter(args):
     with open(args.file, "r") as read_file:
         reader = csv.reader(read_file, delimiter=args.delimiter)
         header = reader.__next__()
-        uid_index = header.index("IKL")
+        #an error is raised here if incorrect delimiter was user_index
+        try:
+            uid_index = header.index("IKL")
+        except:
+            die("Sure you used the correct delimiter?")
+
+        #process data lines
         for row in reader:
             uid = row[uid_index]
 
