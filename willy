@@ -77,6 +77,7 @@ def parse_arguments():
                         help="Tell Willy what file to do something with.")
     parser.add_argument("-o", "--output-file",
                         help="Tell Willy what file to write to.")
+    parser.add_argument("-d", "--delimiter", default=",")
 
     args = parser.parse_args()
 
@@ -101,7 +102,7 @@ def drop_crap(args):
     #process data and print to new file
     with open(args.file, "r") as read_file:
         with open(path, "w") as write_file:
-            reader = csv.reader(read_file, delimiter=';')
+            reader = csv.reader(read_file, delimiter='args.delimiter')
             for row in reader:
                 write_file.write(row[0] + "," + row[2] + "," + row[3] + ","
                                 + row[4] + "\n")
@@ -119,8 +120,8 @@ def filter(args):
 
     # get the index at which the value we're sorting on is at
     first_line = lines.pop(0)
-    first_line_array = first_line.split(",")
-    index = first_line.index("IKL")
+    first_line_array = first_line.split(args.delimiter)
+    index = first_line_array.index("IKL")
     print_info("I think the user ID is at index " + str(index))
 
     dict = get_user_hash(lines, index)
