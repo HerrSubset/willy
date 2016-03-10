@@ -132,10 +132,10 @@ def parse_arguments():
 ################################################################################
 
 # the dropCrap command. It throws away all data fields except for "IKL",
-# "TRACE_ID", and "TYPE_OMSCHRIJVING"
+# "TRACE_ID", "TIMESTAMP" and "TYPE_OMSCHRIJVING"
 def drop_crap(args):
     #load data file
-    print_info("I'm loading your file. Be patient, it's 19 million records and I don't know how to multithread.")
+    print_info("I'm loading your file. Be patient, it's a lot of records and I don't know how to multithread.")
 
     #create a new file to write to
     path = get_output_path(args)
@@ -157,7 +157,6 @@ def drop_crap(args):
 # their data to a new file.
 def filter(args):
     #create a list with all user IDs
-    print_info("Just lemme get all the peeps that are in here real quick.")
     users = list(get_uids(args))
 
 
