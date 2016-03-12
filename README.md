@@ -35,11 +35,11 @@ Once again, here's an example:
 
 
 ### Sequencify
-This command transforms data into itemsets or sequences in a format so that [SPMF](http://www.philippe-fournier-viger.com/spmf/) can work with it. The input data will need the "TRACE_ID", "TYPE_OMSCHRIJVING" and "TIMESTAMP" attributes.
+This command transforms data into itemsets or sequences in a format so that [SPMF](http://www.philippe-fournier-viger.com/spmf/) can work with it. The input data will need the "TRACE_ID", "TYPE_OMSCHRIJVING" and "TIMESTAMP" attributes. The output format has to be provided with the ``-f`` flag. Possible values at this point are "itemset" and "sequence".
 
 As usual, an example:
 ```
-  $ willy sequencify filteredByWilly.csv
+  $ willy sequencify filteredByWilly.csv -f sequence
   [INFO] Putting all them sequences in a dictionary
 ```
 
@@ -70,10 +70,8 @@ The ``-p 0.02`` flag means that we want to keep 2% of the users' data in the fil
 The last step is to actually generate itemsets out of our data. Otherwise SPMF can't do anything with it.
 
 ```
-  $ willy sequencify filteredByWilly.csv
+  $ willy sequencify filteredByWilly.csv -f itemset
   [INFO] Putting all them sequences in a dictionary
 ```
 
 The itemsets can be found in the file ``sequences.txt``. Note that Willy can only generate frequent itemsets at this point. That is, lines where every item is separated by a space.
-
-We're still working on providing functionality to actually generate a sequence database that SPMF can actually read. If you'd like to get your hands dirty however, feel free to fork the repository and send a pull request.
