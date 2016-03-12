@@ -256,7 +256,9 @@ def filter(args):
 
 
 
-#
+# transform the data in a format that SPMF can read. Itemsets are separated
+# just by spaces. In Sequences, itemsets are separated by "-1" and a sequence
+# itself is terminated by "-2".
 def sequencify(args):
     #check if the requested output format is a valid once
     available_formats = ("itemset", "sequence")
@@ -311,6 +313,40 @@ def sequencify(args):
 
 
 
+# Numbrify maps every value of the "TYPE_OMSCHRIJVING" field to a numeric value.
+# It then uses that mapping to
+def numbrify(args):
+    mapping_dict = {}
+
+    path = get_output_path(args, "numbrified.csv")
+
+    #process data and print to new file
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header to new file
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            for row in reader:
+                if not (row[action_index] in mapping_dict.keys()):
+                    mapping_dict[row[action_index]] = len(mapping_dict.keys()) + 1
+
+                #replace string with number
+                row[action_index] = str(mapping_dict[row[action_index]])
+
+                #write new line
+                write_file.write(",".join(row) + "\n")
+
+
+
 
 
 
@@ -333,6 +369,10 @@ if __name__ == "__main__":
     #start the sequencify command
     elif args.command == "sequencify":
         sequencify(args)
+
+    #start the numbrify
+    elif args.command == "numbrify":
+        numbrify(args)
 
     # execute this is the command was unknown
     else:
