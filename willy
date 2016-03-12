@@ -3,6 +3,7 @@
 import argparse
 import csv
 import random
+import os.path
 from datetime import datetime
 
 
@@ -153,6 +154,20 @@ def get_sequence(array, action_index):
     res += " -2"
 
     return res
+
+
+
+# Searches for a file name to write the numbrify mappings to. It keeps looking
+# until it found a file that doesn't exist yet.
+def get_mappings_path():
+    path = "mapping_"
+    number = 0
+    extension = ".txt"
+
+    while os.path.isfile(path + str(number) + extension):
+        number += 1
+
+    return path + str(number) + extension
 
 
 
@@ -321,6 +336,7 @@ def numbrify(args):
     path = get_output_path(args, "numbrified.csv")
 
     #process data and print to new file
+    print_info("Seems you want some numbrification done. Fine, I'll park it in " + path)
     with open(args.file, "r") as read_file:
         with open(path, "w") as write_file:
             reader = csv.reader(read_file, delimiter=args.delimiter)
@@ -344,6 +360,14 @@ def numbrify(args):
 
                 #write new line
                 write_file.write(",".join(row) + "\n")
+
+    #print the mapping to a new file
+    path = get_mappings_path()
+
+    print_info("In case you want to check things, the mappings I made are in " + path)
+    with open(path, "w") as write_file:
+        for k in mapping_dict:
+            write_file.write(k + "  -  " + str(mapping_dict[k]) + "\n")
 
 
 
