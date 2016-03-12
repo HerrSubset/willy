@@ -129,13 +129,28 @@ def sort_sequence_array(array, date_index):
 
 
 
-#transforms an array of arrays into a sequence string
-def get_sequence(array, action_index):
+#transforms an array of arrays into an itemset string
+def get_itemset(array, action_index):
     res = ""
 
     for line in array:
         res += line[action_index].replace(" ", "")
         res += " "
+
+    return res
+
+
+
+#transforms an array of arrays into an itemset string
+def get_sequence(array, action_index):
+    res = ""
+
+    for line in array:
+        res += line[action_index].replace(" ", "") #remove whitespace
+        res += " -1 "
+
+    #sequences are terminated by "-2"
+    res += " -2"
 
     return res
 
@@ -153,6 +168,8 @@ def parse_arguments():
     parser.add_argument("-p", "--percentage", type=float)
     parser.add_argument("-s", "--sort",
                         help="sort the hash when creating sequences")
+    parser.add_argument("-f", "--format",
+                        help = "the format that sequencify should use (e.g 'itemset')")
 
     args = parser.parse_args()
 
@@ -241,6 +258,13 @@ def filter(args):
 
 #
 def sequencify(args):
+    #check if the requested output format is a valid once
+    available_formats = ("itemset", "sequence")
+
+    if not args.format  or not args.format in available_formats:
+        die("Invalid format, possible options are 'itemset' and 'sequence'")
+
+
     trace_hash = {}
 
     print_info("Putting all them sequences in a dictionary")
@@ -272,8 +296,18 @@ def sequencify(args):
     path = get_output_path(args, "sequences.txt")
     with open(path, "w") as write_file:
         for key in trace_hash:
-            sequence = get_sequence(trace_hash[key], action_index)
-            write_file.write(sequence + "\n")
+            line = ""
+
+            #print itemset
+            if args.format == "itemset":
+                line = get_itemset(trace_hash[key], action_index)
+
+            #print sequence
+            elif args.format == "sequence":
+                line = get_sequence(trace_hash[key], action_index)
+
+            #append line to file
+            write_file.write(line + "\n")
 
 
 
