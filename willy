@@ -367,7 +367,7 @@ def numbrify(args):
     print_info("In case you want to check things, the mappings I made are in " + path)
     with open(path, "w") as write_file:
         for k in mapping_dict:
-            write_file.write(k + "  -  " + str(mapping_dict[k]) + "\n")
+            write_file.write(k + "  =  " + str(mapping_dict[k]) + "\n")
 
 
 

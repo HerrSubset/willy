@@ -44,6 +44,21 @@ As usual, an example:
 ```
 
 
+### Numbrify
+SPMF needs numerical input for most of its algorithms. Numbrify can map all values of "TYPE_OMSCHRIJVING" to numbers. The way you do this is as follows:
+
+```
+  $ willy numbrify willyWroteThis.csv
+  [INFO] Seems you want some numbrification done. Fine, I'll park it in numbrified.csv
+  [INFO] In case you want to check things, the mappings I made are in mapping_0.txt
+```
+
+If you go check out the output file, you can see that all action values are now numbers. If you want to know what action a number refers to, check out the "mapping_X.txt" file that willy referred to.
+
+The output of this command can be used as input for the ``sequencify`` command, so there's no problem there.
+
+
+
 ## Typical Use Case
 Let's say we want to use our dataset, stored in the file "full_data.csv" in my case, to generate frequent itemsets with [SPMF](http://www.philippe-fournier-viger.com/spmf/). The first, optional step, would be to drop some variables we don't need. The following steps won't have to load as much data this way.
 
