@@ -60,33 +60,62 @@ The output of this command can be used as input for the ``sequencify`` command, 
 
 
 ## Typical Use Case
-Let's say we want to use our dataset, stored in the file "full_data.csv" in my case, to generate frequent itemsets with [SPMF](http://www.philippe-fournier-viger.com/spmf/). The first, optional step, would be to drop some variables we don't need. The following steps won't have to load as much data this way.
+Let's say we want to analyze our data using the BIDE+ algorithm in SPMF. First of all we will clean up our data using the ``dropCrap`` command so that the following steps go a bit faster.
 
 ```
-  $ willy dropCrap full_data.csv -d ";" -o reducedDataSet.csv
+  $ willy dropCrap full_data.csv -d ";" -o full_cleaned.csv
   [INFO] I'm loading your file. Be patient, it's a lot of records and I don't know how to multithread.
-  [INFO] Yo dude, I put all that good stuff you asked for in reducedDataSet.csv
+  [INFO] Yo dude, I put all that good stuff you asked for in full_cleaned.csv
 ```
 
-Note that we have to tell Willy to use ';' as a delimiter. This is what the ``-d ";"`` part of the command does. We also provided an output file by typing ``-o reducedDataSet.csv``, so that's where our new data will be stored. In case you don't tell Willy what file to write to, he creates a new one by default so your original data doesn't get lost.
+Note that for the full data it's necessary to specify ``-d ";"`` because the semicolon is the delimiter in the original datafile.
 
-At this point we still have about 19 million records in our dataset, so that might be a bit too much to quickly test algorithms on. The ``filter`` command allows us to reduce that number by selecting only a certain % of users that are retained.
+Now that our cleaned data is in "full_clean.csv", we can filter it down a bit. Let's say we want the algorithm to run on 20% of our data.
 
 ```
-  $ willy filter reducedDataSet.csv -p 0.02
+  $ willy filter full_cleaned.csv -p 0.2 -o twenty_percent_clean.csv
   [INFO] Just lemme get all the peeps that are in here real quick.
-  [INFO] Yo man, I selected 3866 dudes and dudettes for you, hope you're happy with them.
+  [INFO] Yo man, I selected 32853 dudes and dudettes for you, hope you're happy with them.
   [INFO] Let me see if I can find back all these peeps.
   [INFO] About damn time, let the printing begin!
 ```
 
-The ``-p 0.02`` flag means that we want to keep 2% of the users' data in the file. Note that we didn't provide an output file, so willy created one for us. It's called ``filteredByWilly.csv``.
-
-The last step is to actually generate itemsets out of our data. Otherwise SPMF can't do anything with it.
+We now have 20% of the users selected in "twenty_percent_clean.csv", but the file is still not in the right format for SPMF to understand it. Since we also want to run an algorithm that needs numerical input values, we first have to ``numbrify`` the data. Here's how that's done:
 
 ```
-  $ willy sequencify filteredByWilly.csv -f itemset
+  $ willy numbrify twenty_percent_clean.csv -o twenty_percent_numbers.csv
+  [INFO] Seems you want some numbrification done. Fine, I'll park it in twenty_percent_numbers.csv
+  [INFO] In case you want to check things, the mappings I made are in mapping_0.txt
+```
+
+Remember to check in what file the mappings were stored by Willy. We will need them later on.
+
+Our data is now all numeric, so the last transformation step is to make sequences out of the data:
+
+```
+  $ willy sequencify twenty_percent_numbers.csv -o numeric_sequences.txt -f sequence
   [INFO] Putting all them sequences in a dictionary
 ```
 
-The itemsets can be found in the file ``sequences.txt``. Note that Willy can only generate frequent itemsets at this point. That is, lines where every item is separated by a space.
+Don't forget to tell Willy that you want sequences by typing ``-f sequence``. Otherwise he will complain.
+
+The data that is in "numeric_sequences.txt" can now be used by spmf. As an example we'll run the BIDE+ algorithm with 50% support.
+
+```
+  $ spmf run BIDE+ numeric_sequences.txt 50_bide_output.txt 50%
+  ============  BIDE+ - SPMF 0.99b - 2016 - STATISTICS =====
+   Total time ~ 677 ms
+   Frequent sequences count : 8
+   Max memory (mb) : 176.756553649902348
+  ==========================================================
+
+
+```
+
+You now have the output of SPMF, but there's only numbers in there. To make reading it a little more easy, Willy can translate it back to text using the mapping file it created earlier. Here's how you do that:
+
+```
+  willy translate 50_bide_output.txt -m mapping_0.txt -o 50_bide_translated_output.txt
+```
+
+The output is now in "50_bide_translated_output.txt". Have fun interpreting the results!
