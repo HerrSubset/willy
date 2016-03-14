@@ -193,17 +193,17 @@ def get_mapping_dict(args):
 
 # translate numeric values in line to strings using the mapping dictionary
 def translate_line(line, mapping_dict):
-    first_split = line.split(" #SUP: ")
-    second_split = first_split[0].split(" ")
+    line_split = line.split(" ")
 
-    for i in range(0, len(second_split)):
-        if second_split[i] in mapping_dict.keys():
-            second_split[i] = mapping_dict[second_split[i]]
+    i = 0
+    while (i < len(line_split)) and (line_split[i] != "#SUP:"):
+        if line_split[i] in mapping_dict.keys():
+            line_split[i] = mapping_dict[line_split[i]]
 
-    res = " ".join(second_split)
-    res += " #SUP: " + first_split[1]
+        i += 1
 
-    return res
+
+    return " ".join(line_split)
 
 
 
