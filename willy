@@ -427,9 +427,34 @@ def translate(args):
 				
 				
 				
-
+# Counts the occurrences of each TYPE_OMSCHRIJVING
 def count(args):
-	pass
+    count_dict = {}
+
+    #process data
+    print_info("Be patient, we're counting these lines one by one...")
+    with open(args.file, "r") as read_file:
+        reader = csv.reader(read_file, delimiter=args.delimiter)
+        header = reader.__next__()
+        #an error is raised here if incorrect delimiter was user_index
+        try:
+            action_index = header.index("TYPE_OMSCHRIJVING")
+        except:
+            die("Sure you used the correct delimiter?")
+
+        #process data
+        for row in reader:
+            if not (row[action_index] in count_dict.keys()):
+                count_dict[row[action_index]] = 1
+            else:
+                count_dict[row[action_index]] = int(count_dict[row[action_index]]) + 1
+
+    #print the counts to a new file
+    path = get_output_path(args, "counts.txt")
+
+    with open(path, "w") as write_file:
+        for k in count_dict:
+            write_file.write(k + "  =  " + str(count_dict[k]) + "\n")
 
 
 
@@ -463,8 +488,8 @@ if __name__ == "__main__":
         translate(args)
 		
 	#start the count command
-	elif args.command == "count":
-		count(args)
+    elif args.command == "count":
+        count(args)
 
     # execute this is the command was unknown
     else:
