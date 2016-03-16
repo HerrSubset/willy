@@ -424,6 +424,12 @@ def translate(args):
             for line in read_file:
                 new_line = translate_line(line.rstrip(), mapping_dict)
                 write_file.write(new_line + "\n")
+				
+				
+				
+
+def count(args):
+	pass
 
 
 
@@ -436,11 +442,11 @@ if __name__ == "__main__":
     args = parse_arguments()
 
 
-    # start the dropCrap command
+    #start the dropCrap command
     if args.command == "dropCrap":
         drop_crap(args)
 
-    # start the filter command
+    #start the filter command
     elif args.command == "filter":
         filter(args)
 
@@ -448,12 +454,17 @@ if __name__ == "__main__":
     elif args.command == "sequencify":
         sequencify(args)
 
-    #start the numbrify
+    #start the numbrify command
     elif args.command == "numbrify":
         numbrify(args)
 
+	#start the translate command
     elif args.command == "translate":
         translate(args)
+		
+	#start the count command
+	elif args.command == "count":
+		count(args)
 
     # execute this is the command was unknown
     else:
