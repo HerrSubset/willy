@@ -151,7 +151,7 @@ def get_sequence(array, action_index):
         res += " -1 "
 
     #sequences are terminated by "-2"
-    res += "-2"
+    res += "-2 "
 
     return res
 
@@ -460,22 +460,28 @@ def count(args):
 			
 # Provides some basic statistics for the sequence data set
 def stats(args):
-    stats_dict = {'Average':1, 'Minimum':1, 'Maximum':1}
+    stats_dict = {'Average':1, 'Minimum':100, 'Maximum':1}
     
-	#process data
+    #process data
     print_info("We'll get those statistics for you in a second; sit back and relax!")
     with open(args.file, "r") as read_file:
         counter = 0
         lines = 0
         #process data
         for line in read_file:
-            counter += line.count('-1')
+            line_counter = 0
+            split = line.split(' ')
+            for element in split:
+                if element in ('#SUP:'):
+                    break
+                if not element in ('-1', '-2'):
+                    counter += 1
+                    line_counter += 1
+            if line_counter < stats_dict['Minimum']:
+                stats_dict['Minimum'] = line_counter
+            if line_counter > stats_dict['Maximum']:
+                stats_dict['Maximum'] = line_counter
             lines += 1
-            if line.count('-1') < stats_dict['Minimum']:
-                stats_dict['Minimum'] = line.count('-1')
-            if line.count('-1') > stats_dict['Maximum']:
-                stats_dict['Maximum'] = line.count('-1')
-
         stats_dict['Average'] = counter/lines
 
     #print the stats to a new file
