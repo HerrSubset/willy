@@ -207,6 +207,15 @@ def translate_line(line, mapping_dict):
 
 
 
+# Use only lines that are not blank
+def nonblank_lines(f):
+    for l in f:
+        line = l.rstrip()
+        if line:
+            yield line
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -468,7 +477,7 @@ def stats(args):
         counter = 0
         lines = 0
         #process data
-        for line in read_file:
+        for line in nonblank_lines(read_file):
             line_counter = 0
             split = line.split(' ')
             for element in split:
