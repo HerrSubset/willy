@@ -151,7 +151,7 @@ def get_sequence(array, action_index):
         res += " -1 "
 
     #sequences are terminated by "-2"
-    res += "-2"
+    res += "-2 "
 
     return res
 
@@ -204,6 +204,15 @@ def translate_line(line, mapping_dict):
 
 
     return " ".join(line_split)
+
+
+
+# Use only lines that are not blank
+def nonblank_lines(f):
+    for l in f:
+        line = l.rstrip()
+        if line:
+            yield line
 
 
 
@@ -456,6 +465,40 @@ def count(args):
         for k in count_dict:
             write_file.write(k + "  =  " + str(count_dict[k]) + "\n")
 
+			
+			
+# Provides some basic statistics for the sequence data set
+def stats(args):
+    stats_dict = {'Average':1, 'Minimum':100, 'Maximum':1}
+    
+    #process data
+    print_info("We'll get those statistics for you in a second; sit back and relax!")
+    with open(args.file, "r") as read_file:
+        counter = 0
+        lines = 0
+        #process data
+        for line in nonblank_lines(read_file):
+            line_counter = 0
+            split = line.split(' ')
+            for element in split:
+                if element in ('#SUP:'):
+                    break
+                if not element in ('-1', '-2'):
+                    counter += 1
+                    line_counter += 1
+            if line_counter < stats_dict['Minimum']:
+                stats_dict['Minimum'] = line_counter
+            if line_counter > stats_dict['Maximum']:
+                stats_dict['Maximum'] = line_counter
+            lines += 1
+        stats_dict['Average'] = counter/lines
+
+    #print the stats to a new file
+    path = get_output_path(args, "stats.txt")
+
+    with open(path, "w") as write_file:
+        for k in stats_dict:
+            write_file.write(k + "  =  " + str(stats_dict[k]) + "\n")
 
 
 
@@ -490,6 +533,10 @@ if __name__ == "__main__":
 	#start the count command
     elif args.command == "count":
         count(args)
+		
+    #start the stats command
+    elif args.command == "stats":
+        stats(args)
 
     # execute this is the command was unknown
     else:
