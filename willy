@@ -462,6 +462,7 @@ def count(args):
     path = get_output_path(args, "counts.txt")
 
     with open(path, "w") as write_file:
+        write_file.write("TYPE_OMSCHRIJVING = Frequency \n")
         for k in count_dict:
             write_file.write(k + "  =  " + str(count_dict[k]) + "\n")
 
