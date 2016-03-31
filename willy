@@ -706,6 +706,24 @@ def label(args):
                 row.append(get_unemployment_label(row[duration_index]))
                 write_file.write(",".join(row) + "\n")
 
+def clean():
+    print_info("Ok, I get it. You're too lazy to type all the steps yourself.")
+    print_info("No problem man, let me just do the work for you.")
+
+    requested_filename = args.output_file
+
+    #label the data
+    args.output_file = "tmp_clean_label.csv"
+    label(args)
+
+    #cluster the data
+    args.output_file = "tmp_clean_cluster.csv"
+    cluster(args)
+
+    #drop the crap
+    args.output_file = requested_filename
+
+
 
 
 
@@ -757,6 +775,9 @@ if __name__ == "__main__":
     #start label command
     elif args.command == "label":
         label(args)
+
+    elif args.command == "clean":
+        clean()
 
     # execute this is the command was unknown
     else:
