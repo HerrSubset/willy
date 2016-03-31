@@ -703,7 +703,7 @@ def label(args):
 
             #process data
             for row in reader:
-                row.appen(get_unemployment_label(row[duration_index]))
+                row.append(get_unemployment_label(row[duration_index]))
                 write_file.write(",".join(row) + "\n")
 
 
