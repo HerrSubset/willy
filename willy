@@ -354,6 +354,24 @@ def get_cleaned_row(row, indexes):
 
 
 
+# returns a set with the top-x most frequent items
+def get_top_items(number):
+    res = []
+    items = ["StopSessionRequest", "StartConsulentSessionRequest"]
+
+    i = 0
+    if number < len(items):
+        i = number
+    else:
+        i = len(items)
+
+    for index in range(0,i):
+        res.append(items[index])
+
+    return set(res)
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -370,6 +388,8 @@ def parse_arguments():
                         help = "the format that sequencify should use (e.g 'itemset')")
     parser.add_argument("-m", "--mapping-file",
                         help = "path to the mapping file used for translate")
+    parser.add_argument("-t", "--top-x", default=0, type=int,
+                        help = "defines the top-x that should be removed")
 
     args = parser.parse_args()
 
@@ -739,6 +759,41 @@ def label(args):
                 row.append(get_unemployment_label(row[duration_index]))
                 write_file.write(",".join(row) + "\n")
 
+
+
+# removes the most frequent actions. The "-t" flag defines how many items you
+# want to remove ("-t 1" means removing the top 1)
+def remove_most_frequent(args):
+    top_items = get_top_items(args.top_x)
+
+    path = get_output_path(args, "top_removed.csv")
+
+    if args.top_x > 0:
+        with open(args.file, "r") as read_file:
+            with open(path, "w") as write_file:
+                reader = csv.reader(read_file, delimiter=args.delimiter)
+                header = reader.__next__()
+                #an error is raised here if incorrect delimiter was user_index
+                try:
+                    action_index = header.index("TYPE_OMSCHRIJVING")
+                except:
+                    die("Sure you used the correct delimiter?")
+
+                #write header
+                write_file.write(",".join(header) + "\n")
+
+                #process data
+                for row in reader:
+                    if not(row[action_index] in top_items):
+                        write_file.write(",".join(row) + "\n")
+    else:
+        print_info("You didn't specify the top-x you want to remove. Use the '-t' flag.")
+
+
+
+
+# invokes several other commands after eachother. Makes it easy to clean the
+# initial dataset to something we can work with.
 def clean():
     print_info("Ok, I get it. You're too lazy to type all the steps yourself.")
     print_info("No problem man, let me just do the work for you.")
@@ -814,6 +869,10 @@ if __name__ == "__main__":
     #start label command
     elif args.command == "label":
         label(args)
+
+    #start remove top command
+    elif args.command == "removeMostFrequent":
+        remove_most_frequent(args)
 
     elif args.command == "clean":
         clean()
