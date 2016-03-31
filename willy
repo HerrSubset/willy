@@ -768,41 +768,47 @@ def remove_most_frequent(args):
 
     path = get_output_path(args, "top_removed.csv")
 
-    if args.top_x > 0:
-        with open(args.file, "r") as read_file:
-            with open(path, "w") as write_file:
-                reader = csv.reader(read_file, delimiter=args.delimiter)
-                header = reader.__next__()
-                #an error is raised here if incorrect delimiter was user_index
-                try:
-                    action_index = header.index("TYPE_OMSCHRIJVING")
-                except:
-                    die("Sure you used the correct delimiter?")
-
-                #write header
-                write_file.write(",".join(header) + "\n")
-
-                #process data
-                for row in reader:
-                    if not(row[action_index] in top_items):
-                        write_file.write(",".join(row) + "\n")
-    else:
+    if args.top_x == 0:
         print_info("You didn't specify the top-x you want to remove. Use the '-t' flag.")
+
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            for row in reader:
+                if not(row[action_index] in top_items):
+                    write_file.write(",".join(row) + "\n")
+
+
 
 
 
 
 # invokes several other commands after eachother. Makes it easy to clean the
 # initial dataset to something we can work with.
-def clean():
+def clean(args):
     print_info("Ok, I get it. You're too lazy to type all the steps yourself.")
     print_info("No problem man, let me just do the work for you.")
 
-    requested_filename = args.output_file
+    requested_output = "full_cleaned.csv"
+
+    if args.output_file:
+        requested_output = args.output_file
 
     #label the data
     args.output_file = "tmp_clean_label.csv"
     label(args)
+    print("labeled")
 
     #after writing the first time, the delimiter is definitely a comma
     args.delimiter = ","
@@ -811,10 +817,18 @@ def clean():
     args.output_file = "tmp_clean_no_crap.csv"
     args.file = "tmp_clean_label.csv"
     drop_crap(args)
+    print("dropCrap")
+
+
+    #remove actions we can't use
+    args.output_file = "tmp_clean_top_removed.csv"
+    args.file = "tmp_clean_no_crap.csv"
+    remove_most_frequent(args)
+    print("removeMostFrequent")
 
     #cluster the data
-    args.output_file = "tmp_clean_cluster.csv"
-    args.file = "tmp_clean_no_crap.csv"
+    args.output_file = requested_output
+    args.file = "tmp_clean_top_removed.csv"
     cluster(args)
 
 
@@ -875,7 +889,7 @@ if __name__ == "__main__":
         remove_most_frequent(args)
 
     elif args.command == "clean":
-        clean()
+        clean(args)
 
     # execute this is the command was unknown
     else:
