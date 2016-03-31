@@ -342,6 +342,18 @@ def get_unemployment_label(duration):
 
 
 
+# takes two arrays. One with strings and one with numbers. The second array
+# contains the indexes of what items in the first array have to be retained
+def get_cleaned_row(row, indexes):
+    res = []
+
+    for i in indexes:
+        res.append(row[i])
+
+    return res
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -383,9 +395,30 @@ def drop_crap(args):
     with open(args.file, "r") as read_file:
         with open(path, "w") as write_file:
             reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+
+            #an error is raised here if incorrect delimiter was used
+            indexes = []
+            try:
+                indexes.append(header.index("IKL"))
+                indexes.append(header.index("TRACE_ID"))
+                indexes.append(header.index("TIMESTAMP"))
+                indexes.append(header.index("TYPE_OMSCHRIJVING"))
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #check if unemployment labels are available_formats
+            try:
+                indexes.append(header.index("UNEMPL_LABEL"))
+            except:
+                pass
+
+
+            write_file.write(",".join(get_cleaned_row(header, indexes)) + "\n")
+
+
             for row in reader:
-                write_file.write(row[0] + "," + row[2] + "," + row[3] + ","
-                                + row[4] + "\n")
+                write_file.write(",".join(get_cleaned_row(row, indexes)) + "\n")
 
     print_info("Yo dude, I put all that good stuff you asked for in " + path)
 
@@ -699,7 +732,7 @@ def label(args):
                 die("Sure you used the correct delimiter?")
 
             #write header
-            write_file.write(",".join(header) + "UNEMPL_LABEL\n")
+            write_file.write(",".join(header) + ",UNEMPL_LABEL\n")
 
             #process data
             for row in reader:
@@ -716,12 +749,18 @@ def clean():
     args.output_file = "tmp_clean_label.csv"
     label(args)
 
-    #cluster the data
-    args.output_file = "tmp_clean_cluster.csv"
-    cluster(args)
+    #after writing the first time, the delimiter is definitely a comma
+    args.delimiter = ","
 
     #drop the crap
-    args.output_file = requested_filename
+    args.output_file = "tmp_clean_no_crap.csv"
+    args.file = "tmp_clean_label.csv"
+    drop_crap(args)
+
+    #cluster the data
+    args.output_file = "tmp_clean_cluster.csv"
+    args.file = "tmp_clean_no_crap.csv"
+    cluster(args)
 
 
 
