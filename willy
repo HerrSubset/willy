@@ -5,6 +5,7 @@ import csv
 import random
 import os.path
 from datetime import datetime
+import re
 
 
 
@@ -213,6 +214,118 @@ def nonblank_lines(f):
         line = l.rstrip()
         if line:
             yield line
+
+
+
+#
+def get_cluster_replacement(string):
+    res = string
+
+    # Wijziging..Request
+    if re.match("^Wijzig[a-zA-Z]*Request$", string):
+        res = "WijzigRequest"
+
+    # Wijzigen catwz...
+    elif re.match("^Wijzig.* cat", string) or re.match("^wijzig.* cat", string):
+        res = "WijzigenCatwz"
+
+    # Voeg..Toe..Request
+    elif re.match("^Voeg.*Toe.*Request$", string):
+        res = "VoegToeRequest"
+
+    # Verwijder..Request
+    elif re.match("^Verwijder.*Request$", string):
+        res = "VoegToeRequest"
+
+    # Update...
+    elif re.match("^Update", string):
+        res = "Update"
+
+    # Uitschrijving...
+    elif re.match("^Uitschrijving", string):
+         res = "Uitschrijving"
+
+    # Toggle...ZichtbaarheidsRequest
+    elif re.match("^Toggle.*ZichtbaarheidRequest$", string):
+        res = "ToggleZichtbaarheidRequest"
+
+    # Solliciteer...Request
+    elif re.match("^Solliciteer.*Request$", string):
+        res = "Solliciteerrequest"
+
+    # Screening
+    elif re.match("Screening", string) or re.match("Sectorale", string):
+        res = "a"
+
+    # Project
+    elif re.match("^Project.*", string):
+        res = "Project"
+
+    # Opvolging
+    elif re.match("Opvolging", string):
+        res = "Opvolging"
+
+    # Loopbaanbegeleiding
+    elif re.match("^Loopbaanbegeleiding", string):
+        res = "LoopbaanBegeleiding"
+
+    # Info
+    elif re.match("^Info", string):
+        res = "Info"
+
+    # Herinschrijving
+    elif re.match("^Herinschrijving .*", string):
+        res = "Herinschrijving"
+
+    # Gesprek
+    elif re.match("^Gesprek .*", string):
+        res = "Gesprek"
+
+    # Follow-Up
+    elif re.match("^Follow", string):
+        res = "Follow-up"
+
+    # Doorverwijzing
+    elif re.match("^Doorverwijzing", string):
+        res = "Doorverwijz."
+
+    # Doelgroep
+    elif re.match("^Doelgroep", string) or re.match("^Preventieve", string):
+        res = "Doelgroep"
+
+    # Deel...Request
+    elif re.match("^Deel.*Request$", string):
+        res = "DeelRequest"
+
+    # CatWz...Request
+    elif re.match("^CatWz.*Request$", string):
+        res = "CatWzRequest"
+
+    # Campagne
+    elif re.match("^Campagne", string):
+        res = "Campagne"
+
+    # Opleiding
+    elif re.match("^Beroepsgerichte", string) or re.match("^Mod", string):
+        res = "Opleiding"
+
+    # Begeleiding
+    elif re.match("^Beg", string) or re.match("^Zorgbegeleiding", string):
+        res = "Begeleiding"
+
+    # Attest
+    elif re.match("^Attest", string):
+        res = "Attest"
+
+    # A-codes
+    elif re.match("^A[8,9] .*", string):
+        res = "A_code"
+
+
+
+
+
+    return res
 
 
 
@@ -433,9 +546,9 @@ def translate(args):
             for line in read_file:
                 new_line = translate_line(line.rstrip(), mapping_dict)
                 write_file.write(new_line + "\n")
-				
-				
-				
+
+
+
 # Counts the occurrences of each TYPE_OMSCHRIJVING
 def count(args):
     count_dict = {}
@@ -465,12 +578,12 @@ def count(args):
         for k in count_dict:
             write_file.write(k + "  =  " + str(count_dict[k]) + "\n")
 
-			
-			
+
+
 # Provides some basic statistics for the sequence data set
 def stats(args):
     stats_dict = {'Average':1, 'Minimum':100, 'Maximum':1}
-    
+
     #process data
     print_info("We'll get those statistics for you in a second; sit back and relax!")
     with open(args.file, "r") as read_file:
@@ -502,6 +615,63 @@ def stats(args):
 
 
 
+def cluster(args):
+    path = get_output_path(args, "clustered.csv")
+
+    #process data and print to new file
+    print_info("Writing clustered data to " + path)
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            for row in reader:
+                tmp_string = get_cluster_replacement(row[action_index])
+                row[action_index] = tmp_string
+                write_file.write(",".join(row) + "\n")
+
+
+
+#calculate the duration of unemployment for each trace
+def get_durations(args):
+    durations_hash = {}
+
+    with open(args.file, "r") as read_file:
+        reader = csv.reader(read_file, delimiter=args.delimiter)
+        header = reader.__next__()
+
+        #an error is raised here if incorrect delimiter was used
+        try:
+            duration_index = header.index("UNEMPL_DURATION")
+            trace_index = header.index("TRACE_ID")
+        except:
+            die("Sure you used the correct delimiter?")
+
+        for row in reader:
+            durations_hash[row[trace_index]] = row[duration_index]
+
+
+    #print the durations to a file
+    path = get_output_path(args, "durations.csv")
+
+    print_info("Writing them unemployment durations to " + path)
+    with open(path, "w") as write_file:
+        for k in durations_hash.keys():
+            write_file.write(durations_hash[k] + "\n")
+
+
+
+
+
 ################################################################################
 ## Program Start
 ################################################################################
@@ -529,14 +699,22 @@ if __name__ == "__main__":
 	#start the translate command
     elif args.command == "translate":
         translate(args)
-		
+
 	#start the count command
     elif args.command == "count":
         count(args)
-		
+
     #start the stats command
     elif args.command == "stats":
         stats(args)
+
+    #start cluster command
+    elif args.command == "cluster":
+        cluster(args)
+
+    #start getDurations command
+    elif args.command == "getDurations":
+        get_durations(args)
 
     # execute this is the command was unknown
     else:
