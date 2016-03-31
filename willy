@@ -321,9 +321,22 @@ def get_cluster_replacement(string):
     elif re.match("^A[8,9] .*", string):
         res = "A_code"
 
+    return res
 
 
 
+# return the label for the given unemployment duration. Split points are:
+# short <= 40 < normal <= 285 < long
+def get_unemployment_label(duration):
+    res = "short"
+
+    duration = int(duration)
+
+    if duration > 285:
+        res = "long"
+
+    elif duration > 40:
+        res = "normal"
 
     return res
 
@@ -615,6 +628,7 @@ def stats(args):
 
 
 
+#replace names of actions by their more generic variant.
 def cluster(args):
     path = get_output_path(args, "clustered.csv")
 
@@ -670,6 +684,30 @@ def get_durations(args):
 
 
 
+#add unemployment duration labels to the data (low, normal or long)
+def label(args):
+    path = get_output_path(args, "labeled.csv")
+
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                duration_index = header.index("UNEMPL_DURATION")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "UNEMPL_LABEL\n")
+
+            #process data
+            for row in reader:
+                row.appen(get_unemployment_label(row[duration_index]))
+                write_file.write(",".join(row) + "\n")
+
+
+
 
 
 ################################################################################
@@ -715,6 +753,10 @@ if __name__ == "__main__":
     #start getDurations command
     elif args.command == "getDurations":
         get_durations(args)
+
+    #start label command
+    elif args.command == "label":
+        label(args)
 
     # execute this is the command was unknown
     else:
