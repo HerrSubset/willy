@@ -827,7 +827,7 @@ def clean(args):
     args.output_file = requested_output
     args.file = "tmp_clean_top_removed.csv"
     cluster(args)
-	print_info("Clustered similar actions")
+    print_info("Clustered similar actions")
 
 
 
