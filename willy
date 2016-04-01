@@ -5,6 +5,7 @@ import csv
 import random
 import os.path
 from datetime import datetime
+import re
 
 
 
@@ -216,6 +217,161 @@ def nonblank_lines(f):
 
 
 
+#
+def get_cluster_replacement(string):
+    res = string
+
+    # Wijziging..Request
+    if re.match("^Wijzig[a-zA-Z]*Request$", string):
+        res = "WijzigRequest"
+
+    # Wijzigen catwz...
+    elif re.match("^Wijzig.* cat", string) or re.match("^wijzig.* cat", string):
+        res = "WijzigenCatwz"
+
+    # Voeg..Toe..Request
+    elif re.match("^Voeg.*Toe.*Request$", string):
+        res = "VoegToeRequest"
+
+    # Verwijder..Request
+    elif re.match("^Verwijder.*Request$", string):
+        res = "VoegToeRequest"
+
+    # Update...
+    elif re.match("^Update", string):
+        res = "Update"
+
+    # Uitschrijving...
+    elif re.match("^Uitschrijving", string):
+         res = "Uitschrijving"
+
+    # Toggle...ZichtbaarheidsRequest
+    elif re.match("^Toggle.*ZichtbaarheidRequest$", string):
+        res = "ToggleZichtbaarheidRequest"
+
+    # Solliciteer...Request
+    elif re.match("^Solliciteer.*Request$", string):
+        res = "Solliciteerrequest"
+
+    # Screening
+    elif re.match("Screening", string) or re.match("Sectorale", string):
+        res = "screen"
+
+    # Project
+    elif re.match("^Project.*", string):
+        res = "Project"
+
+    # Opvolging
+    elif re.match("Opvolging", string):
+        res = "Opvolging"
+
+    # Loopbaanbegeleiding
+    elif re.match("^Loopbaanbegeleiding", string):
+        res = "LoopbaanBegeleiding"
+
+    # Info
+    elif re.match("^Info", string):
+        res = "Info"
+
+    # Herinschrijving
+    elif re.match("^Herinschrijving .*", string):
+        res = "Herinschrijving"
+
+    # Gesprek
+    elif re.match("^Gesprek .*", string):
+        res = "Gesprek"
+
+    # Follow-Up
+    elif re.match("^Follow", string):
+        res = "Follow-up"
+
+    # Doorverwijzing
+    elif re.match("^Doorverwijzing", string):
+        res = "Doorverwijz."
+
+    # Doelgroep
+    elif re.match("^Doelgroep", string) or re.match("^Preventieve", string):
+        res = "Doelgroep"
+
+    # Deel...Request
+    elif re.match("^Deel.*Request$", string):
+        res = "DeelRequest"
+
+    # CatWz...Request
+    elif re.match("^CatWz.*Request$", string):
+        res = "CatWzRequest"
+
+    # Campagne
+    elif re.match("^Campagne", string):
+        res = "Campagne"
+
+    # Opleiding
+    elif re.match("^Beroepsgerichte", string) or re.match("^Mod", string):
+        res = "Opleiding"
+
+    # Begeleiding
+    elif re.match("^Beg", string) or re.match("^Zorgbegeleiding", string):
+        res = "Begeleiding"
+
+    # Attest
+    elif re.match("^Attest", string):
+        res = "Attest"
+
+    # A-codes
+    elif re.match("^A[8,9] .*", string):
+        res = "A_code"
+
+    return res
+
+
+
+# return the label for the given unemployment duration. Split points are:
+# short <= 40 < normal <= 285 < long
+def get_unemployment_label(duration):
+    res = "short"
+
+    duration = int(duration)
+
+    if duration > 285:
+        res = "long"
+
+    elif duration > 40:
+        res = "normal"
+
+    return res
+
+
+
+# takes two arrays. One with strings and one with numbers. The second array
+# contains the indexes of what items in the first array have to be retained
+def get_cleaned_row(row, indexes):
+    res = []
+
+    for i in indexes:
+        res.append(row[i])
+
+    return res
+
+
+
+# returns a set with the top-x most frequent items
+def get_top_items(number):
+    res = []
+    items = ["StopSessionRequest", "StartConsulentSessionRequest"]
+
+    i = 0
+    if number < len(items):
+        i = number
+    else:
+        i = len(items)
+
+    for index in range(0,i):
+        res.append(items[index])
+
+    return set(res)
+
+
+
 # check what arguments the user gave to Willy
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -232,6 +388,8 @@ def parse_arguments():
                         help = "the format that sequencify should use (e.g 'itemset')")
     parser.add_argument("-m", "--mapping-file",
                         help = "path to the mapping file used for translate")
+    parser.add_argument("-t", "--top-x", default=0, type=int,
+                        help = "defines the top-x that should be removed")
 
     args = parser.parse_args()
 
@@ -257,9 +415,30 @@ def drop_crap(args):
     with open(args.file, "r") as read_file:
         with open(path, "w") as write_file:
             reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+
+            #an error is raised here if incorrect delimiter was used
+            indexes = []
+            try:
+                indexes.append(header.index("IKL"))
+                indexes.append(header.index("TRACE_ID"))
+                indexes.append(header.index("TIMESTAMP"))
+                indexes.append(header.index("TYPE_OMSCHRIJVING"))
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #check if unemployment labels are available_formats
+            try:
+                indexes.append(header.index("UNEMPL_LABEL"))
+            except:
+                pass
+
+
+            write_file.write(",".join(get_cleaned_row(header, indexes)) + "\n")
+
+
             for row in reader:
-                write_file.write(row[0] + "," + row[2] + "," + row[3] + ","
-                                + row[4] + "\n")
+                write_file.write(",".join(get_cleaned_row(row, indexes)) + "\n")
 
     print_info("Yo dude, I put all that good stuff you asked for in " + path)
 
@@ -433,9 +612,9 @@ def translate(args):
             for line in read_file:
                 new_line = translate_line(line.rstrip(), mapping_dict)
                 write_file.write(new_line + "\n")
-				
-				
-				
+
+
+
 # Counts the occurrences of each TYPE_OMSCHRIJVING
 def count(args):
     count_dict = {}
@@ -462,16 +641,15 @@ def count(args):
     path = get_output_path(args, "counts.txt")
 
     with open(path, "w") as write_file:
-        write_file.write("TYPE_OMSCHRIJVING = Frequency \n")
         for k in count_dict:
             write_file.write(k + "  =  " + str(count_dict[k]) + "\n")
 
-			
-			
+
+
 # Provides some basic statistics for the sequence data set
 def stats(args):
     stats_dict = {'Average':1, 'Minimum':100, 'Maximum':1}
-    
+
     #process data
     print_info("We'll get those statistics for you in a second; sit back and relax!")
     with open(args.file, "r") as read_file:
@@ -503,6 +681,202 @@ def stats(args):
 
 
 
+#replace names of actions by their more generic variant.
+def cluster(args):
+    path = get_output_path(args, "clustered.csv")
+
+    #process data and print to new file
+    print_info("Writing clustered data to " + path)
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            for row in reader:
+                tmp_string = get_cluster_replacement(row[action_index])
+                row[action_index] = tmp_string
+                write_file.write(",".join(row) + "\n")
+
+
+
+#calculate the duration of unemployment for each trace
+def get_durations(args):
+    durations_hash = {}
+
+    with open(args.file, "r") as read_file:
+        reader = csv.reader(read_file, delimiter=args.delimiter)
+        header = reader.__next__()
+
+        #an error is raised here if incorrect delimiter was used
+        try:
+            duration_index = header.index("UNEMPL_DURATION")
+            trace_index = header.index("TRACE_ID")
+        except:
+            die("Sure you used the correct delimiter?")
+
+        for row in reader:
+            durations_hash[row[trace_index]] = row[duration_index]
+
+
+    #print the durations to a file
+    path = get_output_path(args, "durations.csv")
+
+    print_info("Writing them unemployment durations to " + path)
+    with open(path, "w") as write_file:
+        for k in durations_hash.keys():
+            write_file.write(durations_hash[k] + "\n")
+
+
+
+#add unemployment duration labels to the data (low, normal or long)
+def label(args):
+    path = get_output_path(args, "labeled.csv")
+
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                duration_index = header.index("UNEMPL_DURATION")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + ",UNEMPL_LABEL\n")
+
+            #process data
+            for row in reader:
+                row.append(get_unemployment_label(row[duration_index]))
+                write_file.write(",".join(row) + "\n")
+
+
+
+# removes the most frequent actions. The "-t" flag defines how many items you
+# want to remove ("-t 1" means removing the top 1)
+def remove_most_frequent(args):
+    top_items = get_top_items(args.top_x)
+
+    path = get_output_path(args, "top_removed.csv")
+
+    if args.top_x == 0:
+        print_info("You didn't specify the top-x you want to remove. Use the '-t' flag.")
+
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            for row in reader:
+                if not(row[action_index] in top_items):
+                    write_file.write(",".join(row) + "\n")
+
+
+
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> origin/master
+# invokes several other commands after eachother. Makes it easy to clean the
+# initial dataset to something we can work with.
+def clean(args):
+    print_info("Ok, I get it. You're too lazy to type all the steps yourself.")
+    print_info("No problem man, let me just do the work for you.")
+
+    requested_output = "full_cleaned.csv"
+
+    if args.output_file:
+        requested_output = args.output_file
+
+    #label the data
+    args.output_file = "tmp_clean_label.csv"
+    label(args)
+    print("labeled")
+
+    #after writing the first time, the delimiter is definitely a comma
+    args.delimiter = ","
+
+    #drop the crap
+    args.output_file = "tmp_clean_no_crap.csv"
+    args.file = "tmp_clean_label.csv"
+    drop_crap(args)
+    print("dropCrap")
+
+
+    #remove actions we can't use
+    args.output_file = "tmp_clean_top_removed.csv"
+    args.file = "tmp_clean_no_crap.csv"
+    remove_most_frequent(args)
+    print("removeMostFrequent")
+
+    #cluster the data
+    args.output_file = requested_output
+    args.file = "tmp_clean_top_removed.csv"
+    cluster(args)
+
+
+
+<<<<<<< HEAD
+# splits the complete dataset into three subsets, based on the label for
+# unemployment duration
+def split(args):
+    print_info("Splitting the data into three subsets, based on the unemployment duration label.")
+
+    path_short = get_output_path(args, "short_unemployment.csv")
+    path_normal = get_output_path(args, "normal_unemployment.csv")
+    path_long = get_output_path(args, "long_unemployment.csv")
+
+    with open(args.file, "r") as read_file:
+        with open(path_short, "w") as write_short:
+            with open(path_normal, "w") as write_normal:
+                with open(path_long, "w") as write_long:
+                    reader = csv.reader(read_file, delimiter=args.delimiter)
+                    header = reader.__next__()
+                    #an error is raised here if incorrect delimiter was user_index
+                    try:
+                        action_index = header.index("UNEMPL_LABEL")
+                    except:
+                        die("Sure you used the correct delimiter?")
+
+                    #write header
+                    write_short.write(",".join(header) + "\n")
+                    write_normal.write(",".join(header) + "\n")
+                    write_long.write(",".join(header) + "\n")
+
+                    #process data
+                    for row in reader:
+                        if (row[action_index] == "short"):
+                            write_short.write(",".join(row) + "\n")
+                        elif (row[action_index] == "normal"):
+                            write_normal.write(",".join(row) + "\n")
+                        elif (row[action_index] == "long"):
+                            write_long.write(",".join(row) + "\n")
+	
+=======
+
+>>>>>>> origin/master
+
+
 ################################################################################
 ## Program Start
 ################################################################################
@@ -530,15 +904,40 @@ if __name__ == "__main__":
 	#start the translate command
     elif args.command == "translate":
         translate(args)
-		
+
 	#start the count command
     elif args.command == "count":
         count(args)
-		
+
     #start the stats command
     elif args.command == "stats":
         stats(args)
 
+    #start cluster command
+    elif args.command == "cluster":
+        cluster(args)
+
+    #start getDurations command
+    elif args.command == "getDurations":
+        get_durations(args)
+
+    #start label command
+    elif args.command == "label":
+        label(args)
+
+    #start remove top command
+    elif args.command == "removeMostFrequent":
+        remove_most_frequent(args)
+
+    elif args.command == "clean":
+        clean(args)
+
+<<<<<<< HEAD
+    elif args.command == "split":
+        split(args)
+
+=======
+>>>>>>> origin/master
     # execute this is the command was unknown
     else:
         die("Yo man, what is this '" + args.command +
