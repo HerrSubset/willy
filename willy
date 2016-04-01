@@ -791,12 +791,6 @@ def remove_most_frequent(args):
 
 
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> origin/master
 # invokes several other commands after eachother. Makes it easy to clean the
 # initial dataset to something we can work with.
 def clean(args):
@@ -836,7 +830,6 @@ def clean(args):
 
 
 
-<<<<<<< HEAD
 # splits the complete dataset into three subsets, based on the label for
 # unemployment duration
 def split(args):
@@ -871,10 +864,7 @@ def split(args):
                             write_normal.write(",".join(row) + "\n")
                         elif (row[action_index] == "long"):
                             write_long.write(",".join(row) + "\n")
-	
-=======
 
->>>>>>> origin/master
 
 
 ################################################################################
@@ -932,12 +922,9 @@ if __name__ == "__main__":
     elif args.command == "clean":
         clean(args)
 
-<<<<<<< HEAD
     elif args.command == "split":
         split(args)
 
-=======
->>>>>>> origin/master
     # execute this is the command was unknown
     else:
         die("Yo man, what is this '" + args.command +
