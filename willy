@@ -255,7 +255,7 @@ def get_cluster_replacement(string):
 
     # Screening
     elif re.match("Screening", string) or re.match("Sectorale", string):
-        res = "screen"
+        res = "Screening"
 
     # Project
     elif re.match("^Project.*", string):
@@ -357,7 +357,7 @@ def get_cleaned_row(row, indexes):
 # returns a set with the top-x most frequent items
 def get_top_items(number):
     res = []
-    items = ["StopSessionRequest", "StartConsulentSessionRequest"]
+    items = ["StopSessionRequest", "StartConsulentSessionRequest", "StartBurgerSessionRequest"]
 
     i = 0
     if number < len(items):
@@ -365,7 +365,7 @@ def get_top_items(number):
     else:
         i = len(items)
 
-    for index in range(0,i):
+    for index in range(i):
         res.append(items[index])
 
     return set(res)
@@ -833,6 +833,40 @@ def clean(args):
 
 
 
+# splits the complete dataset into three subsets, based on the label for
+# unemployment duration
+def split(args):
+    print_info("Splitting the data into three subsets, based on the unemployment duration label.")
+
+    path_short = get_output_path(args, "short_unemployment.csv")
+    path_normal = get_output_path(args, "normal_unemployment.csv")
+    path_long = get_output_path(args, "long_unemployment.csv")
+
+    with open(args.file, "r") as read_file:
+        with open(path_short, "w") as write_short:
+            with open(path_normal, "w") as write_normal:
+                with open(path_long, "w") as write_long:
+                    reader = csv.reader(read_file, delimiter=args.delimiter)
+                    header = reader.__next__()
+                    #an error is raised here if incorrect delimiter was user_index
+                    try:
+                        action_index = header.index("UNEMPL_LABEL")
+                    except:
+                        die("Sure you used the correct delimiter?")
+
+                    #write header
+                    write_short.write(",".join(header) + "\n")
+                    write_normal.write(",".join(header) + "\n")
+                    write_long.write(",".join(header) + "\n")
+
+                    #process data
+                    for row in reader:
+                        if (row[action_index] == "short"):
+                            write_short.write(",".join(row) + "\n")
+                        elif (row[action_index] == "normal"):
+                            write_normal.write(",".join(row) + "\n")
+                        elif (row[action_index] == "long"):
+                            write_long.write(",".join(row) + "\n")
 
 
 
@@ -890,6 +924,9 @@ if __name__ == "__main__":
 
     elif args.command == "clean":
         clean(args)
+
+    elif args.command == "split":
+        split(args)
 
     # execute this is the command was unknown
     else:
