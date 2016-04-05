@@ -194,6 +194,7 @@ def get_mapping_dict(args):
 
 # translate numeric values in line to strings using the mapping dictionary
 def translate_line(line, mapping_dict):
+    line = line.replace(",", " -1 ")
     line_split = line.split(" ")
 
     i = 0
