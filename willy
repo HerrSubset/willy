@@ -792,6 +792,63 @@ def remove_most_frequent(args):
 
 
 
+# removes all items that do not appear inside of a burger session. Burger
+# sessions start with the "StartBurgerSessionRequest" action and end with
+# "StopSessionRequest", "StartConsulentSessionRequest",
+# "StartBurgerSessionRequest" or with the start of a new trace.
+def filter_sessions(args):
+    path = get_output_path(args, "sessions_only.csv")
+
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            reader = csv.reader(read_file, delimiter=args.delimiter)
+            header = reader.__next__()
+            #an error is raised here if incorrect delimiter was user_index
+            try:
+                action_index = header.index("TYPE_OMSCHRIJVING")
+                trace_index = header.index("TRACE_ID")
+            except:
+                die("Sure you used the correct delimiter?")
+
+            #write header
+            write_file.write(",".join(header) + "\n")
+
+            #process data
+            writing = False
+            cur_trace_id = ""
+            end_actions = ["StopSessionRequest", "StartConsulentSessionRequest"]
+
+            for row in reader:
+                write_this = False
+                if writing:
+                    write_this = True
+
+                # check if a new trace starts
+                if row[trace_index] != cur_trace_id:
+                    writing = False
+                    write_this = False
+                    cur_trace_id = row[trace_index]
+
+
+                # check if new session starts
+                if row[action_index] == "StartBurgerSessionRequest":
+                    writing = True
+                    write_this = True
+
+                # check if this action ends the session
+                elif row[action_index] in end_actions:
+                    writing = False
+
+
+                # check if current line should be written out
+                if write_this:
+                    write_file.write(",".join(row) + "\n")
+
+
+
+
+
+
 
 
 
@@ -923,11 +980,14 @@ if __name__ == "__main__":
     elif args.command == "removeMostFrequent":
         remove_most_frequent(args)
 
-    elif args.command == "clean":
-        clean(args)
-
     elif args.command == "split":
         split(args)
+
+    elif args.command == "filterSessions":
+        filter_sessions(args)
+
+    elif args.command == "clean":
+        clean(args)
 
     # execute this is the command was unknown
     else:
