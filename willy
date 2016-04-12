@@ -336,7 +336,7 @@ def get_unemployment_label(duration):
     if duration > 387:
         res = "long"
 
-    elif duration > 60:
+    elif duration > 61:
         res = "normal"
 
     return res
