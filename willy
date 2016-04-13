@@ -863,13 +863,18 @@ def clean(args):
     if args.output_file:
         requested_output = args.output_file
 
-    #label the data
-    args.output_file = "tmp_clean_label.csv"
-    label(args)
-    print("labeled")
+    #filter sessions
+    args.output_file = "tmp_filtered.csv"
+    filter_sessions(args)
+    print("filtered")
 
+    #label the data
     #after writing the first time, the delimiter is definitely a comma
     args.delimiter = ","
+    args.output_file = "tmp_clean_label.csv"
+    args.file = "tmp_filtered.csv"
+    label(args)
+    print("labeled")
 
     #drop the crap
     args.output_file = "tmp_clean_no_crap.csv"
@@ -883,11 +888,6 @@ def clean(args):
     args.file = "tmp_clean_no_crap.csv"
     remove_most_frequent(args)
     print("removeMostFrequent")
-
-    #cluster the data
-    args.output_file = requested_output
-    args.file = "tmp_clean_top_removed.csv"
-    cluster(args)
 
 
 
