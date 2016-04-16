@@ -846,12 +846,6 @@ def filter_sessions(args):
 
 
 
-
-
-
-
-
-
 # invokes several other commands after eachother. Makes it easy to clean the
 # initial dataset to something we can work with.
 def clean(args):
@@ -928,6 +922,22 @@ def split(args):
 
 
 
+# transforms output of sequence mining into input for process mining (CSV)
+def transform(args):
+    path = get_output_path(args, "transformed.csv")
+    with open(args.file, "r") as read_file:
+        with open(path, "w") as write_file:
+            write_file.write("TRACE_ID,TYPE_OMSCHRIJVING\n")
+            counter = 1
+            for line in read_file:
+                split = line.split(' -1 ')
+                for element in split:
+                    if not re.match("^#SUP:.*", element):
+                        write_file.write(str(counter) + "," + element + "\n")
+                counter+=1
+
+
+
 ################################################################################
 ## Program Start
 ################################################################################
@@ -988,6 +998,9 @@ if __name__ == "__main__":
 
     elif args.command == "clean":
         clean(args)
+
+    elif args.command == "transform":
+        transform(args)
 
     # execute this is the command was unknown
     else:
